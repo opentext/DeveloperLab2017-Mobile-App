@@ -1,5 +1,5 @@
 import React from 'react';
-import {Page, Button, BottomToolbar, List, ListItem, ListHeader, Icon, Input} from 'react-onsenui';
+import {Page, Button, BottomToolbar, List, ListItem, ListHeader, Icon, Input, ProgressBar} from 'react-onsenui';
 import withScriptjs from 'react-google-maps/lib/async/withScriptjs';
 import {withGoogleMap, GoogleMap, Marker} from "react-google-maps";
 import {AWLocation, AWCompass} from 'appworks-js';
@@ -17,7 +17,7 @@ const defaultMapCenter = {lat: 43.6525, lng: -79.381667};
  * The service that provides us with our twitter search data
  * @type {string}
  */
-const tweetServiceEndpoint = 'https://reqres.in/api/users/2';
+const tweetServiceEndpoint = 'http://ew2016.appworks.dev:8080/twitter-proxy-service/api/tweets?searchTerm=Wayne+Gretzky';
 
 /**
  * Wrapper around the "react-google-maps" rendering helper to wrap our Google Map component and provide it with
@@ -26,7 +26,7 @@ const tweetServiceEndpoint = 'https://reqres.in/api/users/2';
 const DeveloperLabGMap = _.flowRight(withScriptjs, withGoogleMap)(props => (
     <GoogleMap
         ref={props.onMapLoad}
-        defaultZoom={15}
+        defaultZoom={10}
         center={getMapCenter(props)}
         onDragStart={props.onDragStart}
         onClick={props.onMapClick}>
@@ -65,7 +65,12 @@ export default class App extends React.Component {
             markers: [],
             currentLocation: null,
             setDefaultMapCenter: true,
-            currentTweet: null
+            currentTweet: {
+                fromUser: null,
+                text: 'Loading...'
+            },
+            tweets: [],
+            tweetBatchSize: 0
         };
         // handle input bindings correctly
         this.handleMapLoad = this.handleMapLoad.bind(this);
@@ -80,9 +85,7 @@ export default class App extends React.Component {
         // subscribe to location$ changes on the stream and update the UI with a new marker and re-center the map
         this.startTracking();
         // start polling for twitter data after a timeout so we can see the user's initial location
-        setTimeout(() => {
-            this.pollForTweets();
-        }, 5000);
+        this.pollForTweets();
     }
 
     /**
@@ -127,7 +130,7 @@ export default class App extends React.Component {
     /**
      * Ask the twitter service for random twitter data (with locations) and poll every n seconds
      */
-    pollForTweets(n=3000) {
+    pollForTweets(n=10000) {
         const headers = new Headers({'Content-Type': 'application/json'});
         const request = new Request(tweetServiceEndpoint, {
             method: 'GET',
@@ -135,16 +138,26 @@ export default class App extends React.Component {
         });
         fetch(request).then(res => {
             return res.json();
-        }).then(res => {
-            console.log(res);
-            this.setState({currentTweet: res.data.first_name});
-            this.location$.next({
-                coords: {latitude: 123, longitude: 1234},
-                timestamp: new Date().getTime()
-            });
-            setTimeout(() => {
-                this.pollForTweets()
-            }, n);
+        }).then(tweets => {
+            const doEmitNextTweet = () => {
+                if (tweets.length) {
+                    const currentTweet = tweets.pop();
+                    this.setState({currentTweet: currentTweet.tweet, tweets: tweets});
+                    this.location$.next({
+                        coords: {latitude: currentTweet.latLng.lat, longitude: currentTweet.latLng.lng},
+                        timestamp: new Date().getTime()
+                    });
+                    setTimeout(() => {
+                        doEmitNextTweet();
+                    }, n);
+                } else {
+                    this.pollForTweets();
+                }
+            };
+            // update the batch size to show the progress bar correctly
+            this.setState({tweetBatchSize: tweets.length});
+            // tweets come in batches of 0-50 -- emit one at a time and then grab the next batch
+            doEmitNextTweet();
         });
     }
 
@@ -199,10 +212,13 @@ export default class App extends React.Component {
                     onMapClick={this.handleMapClick}
                     onDragStart={this.handleDragStart}
                     onMarkerRightClick={this.handleMarkerRightClick}/>
-                <h2 style={{letterSpacing: '-2px', margin: '0.5rem'}}>
+                <ProgressBar indeterminate={this.state.tweets.length === 0}
+                             value={((this.state.tweetBatchSize - (this.state.tweets.length || this.state.tweetBatchSize)) / this.state.tweetBatchSize) * 100} />
+                <h3 style={{letterSpacing: '-2px', margin: '0.5rem'}}>
                     <Icon style={{position: 'relative', top: '-4px'}} icon="ion-social-twitter-outline"/>
-                    <span style={{padding: '0.5rem'}}>{this.state.currentTweet}</span>
-                </h2>
+                    <span style={{padding: '0.5rem'}}>{`@${this.state.currentTweet.fromUser}`}</span>
+                </h3>
+                <p style={{margin: '0.5rem'}}>{this.state.currentTweet.text}</p>
             </Page>
         );
     }
