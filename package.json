@@ -12,6 +12,7 @@
     "react": "15.4.2",
     "react-dom": "15.4.2",
     "react-google-maps": "^6.3.0",
-    "react-onsenui": "1.2.x"
+    "react-onsenui": "1.2.x",
+    "rxjs": "^5.4.1"
   }
 }

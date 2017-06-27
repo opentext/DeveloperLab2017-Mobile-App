@@ -1,9 +1,10 @@
 import React from 'react';
-import {Page, Button, BottomToolbar, List, ListItem, ListHeader, Icon} from 'react-onsenui';
+import {Page, Button, BottomToolbar, List, ListItem, ListHeader, Icon, Input} from 'react-onsenui';
 import withScriptjs from 'react-google-maps/lib/async/withScriptjs';
 import {withGoogleMap, GoogleMap, Marker} from "react-google-maps";
 import {AWLocation, AWCompass} from 'appworks-js';
 import * as _ from 'lodash';
+import {Subject} from 'rxjs';
 
 /**
  * Wrapper around the "react-google-maps" rendering helper to wrap our Google Map component and provide it with
@@ -39,51 +40,53 @@ export default class App extends React.Component {
 
     constructor(props) {
         super(props);
-        this.state = {markers: [], locations: [], setDefaultMapCenter: true};
-        this.handleMapLoad = this.handleMapLoad.bind(this);
-        this.handleMapClick = this.handleMapClick.bind(this);
-        this.handleMarkerRightClick = this.handleMarkerRightClick.bind(this);
-        this.handleDragStart = this.handleDragStart.bind(this);
-
-        document.addEventListener('deviceready', () => {
-            this.startTrackingLocation();
-        });
+        this.state = {username: ''};
     }
 
-    startTrackingLocation() {
-        const location = new AWLocation(position => {
-            this.setState({
-                markers: [{position: {lat: position.coords.latitude, lng: position.coords.longitude}}],
-                locations: [{lat: position.coords.latitude, lng: position.coords.longitude}]
-            });
-            // console.info('Position change:', position);
-        });
-        location.watchPosition({enableHighAccuracy: true, filter: 10});
-
-        const compass = new AWCompass(heading => {
-            this.setState({
-                locations: [Object.assign({}, {heading: heading}, this.state.locations[0] || {})]
-            });
-            // console.info('Heading change:', heading);
-        });
-        compass.watchHeading({enableHighAccuracy: true, timeout: 100});
-    }
-
-    handleDragStart() {
-        this.setState({
-            setDefaultMapCenter: false,
-            ignoreCenterChange: true
-        });
-    }
-
-    handleMapLoad(map) {
-    }
-
-    handleMapClick(event) {
-    }
-
-    handleMarkerRightClick(targetMarker) {
-    }
+    // constructor(props) {
+    //     super(props);
+    //     this.state = {
+    //         markers: [],
+    //         currentLocation: null,
+    //         setDefaultMapCenter: true
+    //     };
+    //     this.handleMapLoad = this.handleMapLoad.bind(this);
+    //     this.handleMapClick = this.handleMapClick.bind(this);
+    //     this.handleMarkerRightClick = this.handleMarkerRightClick.bind(this);
+    //     this.handleDragStart = this.handleDragStart.bind(this);
+    //
+    //     this.location$ = new Subject();
+    //     this.startTrackingLocation();
+    //
+    //     document.addEventListener('deviceready', () => {
+    //         const location = new AWLocation(position => {
+    //             this.location$.next(position);
+    //         });
+    //         location.watchPosition({enableHighAccuracy: true, filter: 10});
+    //     });
+    // }
+    //
+    // startTrackingLocation() {
+    //     this.location$.subscribe(position => {
+    //
+    //     });
+    // }
+    //
+    // handleDragStart() {
+    //     this.setState({
+    //         setDefaultMapCenter: false,
+    //         ignoreCenterChange: true
+    //     });
+    // }
+    //
+    // handleMapLoad(map) {
+    // }
+    //
+    // handleMapClick(event) {
+    // }
+    //
+    // handleMarkerRightClick(targetMarker) {
+    // }
 
     renderToolbar() {
         return (
@@ -96,45 +99,51 @@ export default class App extends React.Component {
     render() {
         return (
             <Page renderToolbar={this.renderToolbar} contentStyle={{top: 0, bottom: 0}}>
-                <DeveloperLabGMap
-                    googleMapURL="https://maps.googleapis.com/maps/api/js?key=AIzaSyBq5UXyM3tZ-cbQ8S_-RB7VwdoYZOmaAHg"
-                    loadingElement={<div style={{height: '75%', textAlign: 'center', paddingTop: '50%'}}><Icon icon='ion-navigate' /></div>}
-                    containerElement={<div style={{ height: `75%`}} />}
-                    mapElement={<div style={{ height: `100%` }} />}
-                    markers={this.state.markers}
-                    center={this.state.center ? {lat: this.state.center.lat, lng: this.state.center.lng} : undefined}
-                    setDefaultMapCenter={this.state.setDefaultMapCenter}
-                    ignoreCenterChange={this.state.ignoreCenterChange}
-                    onMapLoad={this.handleMapLoad}
-                    onMapClick={this.handleMapClick}
-                    onDragStart={this.handleDragStart}
-                    onMarkerRightClick={this.handleMarkerRightClick}/>
-                <List
-                    style={{height: '25%'}}
-                    dataSource={this.state.locations}
-                    renderHeader={() => <ListHeader>Live Location Update</ListHeader>}
-                    renderRow={(row, index) => (
-                        <ListItem key={index} modifier="nodivider" tappable={true} onClick={() => {
-                            this.setState({
-                                ignoreCenterChange: false,
-                                setDefaultMapCenter: false,
-                                center: this.state.locations[0] ? {lat: this.state.locations[0].lat, lng: this.state.locations[0].lng} : null
-                            })
-                        }}>
-                            <Icon icon='ion-navigate' />
-                            <span style={{padding: '0 0.5rem'}}>
-                                {row.lat.toString().slice(0, 10)},
-                                &nbsp;
-                                {row.lng.toString().slice(0, 10)}
-                            </span>
-                            <Icon icon='ion-compass' />
-                            <span style={{padding: '0 0.5rem'}}>
-                                {row.heading ? row.heading.magneticHeading.toString().slice(0, 5) : null}
-                            </span>
-                        </ListItem>
-                    )}
-                />
+                <section style={{textAlign: 'center'}}>
+                    <p style={{textAlign: 'center'}}>
+                        <Input placeholder="Search for tweets"/>
+                    </p>
+                    <p>
+                        <Button modifier="outline">Search</Button>
+                    </p>
+                </section>
             </Page>
         );
     }
+
+    // render() {
+    //     return (
+    //         <Page renderToolbar={this.renderToolbar} contentStyle={{top: 0, bottom: 0}}>
+    //             <DeveloperLabGMap
+    //                 googleMapURL="https://maps.googleapis.com/maps/api/js?key=AIzaSyBq5UXyM3tZ-cbQ8S_-RB7VwdoYZOmaAHg"
+    //                 loadingElement={<div style={{height: '75%', textAlign: 'center', paddingTop: '50%'}}><Icon icon='ion-navigate' /></div>}
+    //                 containerElement={<div style={{ height: `75%`}} />}
+    //                 mapElement={<div style={{ height: `100%` }} />}
+    //                 markers={this.state.markers}
+    //                 center={this.state.center ? {lat: this.state.center.lat, lng: this.state.center.lng} : undefined}
+    //                 setDefaultMapCenter={this.state.setDefaultMapCenter}
+    //                 ignoreCenterChange={this.state.ignoreCenterChange}
+    //                 onMapLoad={this.handleMapLoad}
+    //                 onMapClick={this.handleMapClick}
+    //                 onDragStart={this.handleDragStart}
+    //                 onMarkerRightClick={this.handleMarkerRightClick}/>
+    //             <List renderHeader={() => {
+    //                 return (
+    //                     <ListHeader>
+    //                         <Icon icon="ion-ios-circle-filled"
+    //                               style={{color: 'limegreen', position: 'relative', top: '-2px', padding: '0 0.25rem'}}/>
+    //                         Live
+    //                     </ListHeader>
+    //                 );
+    //             }}>
+    //                 <ListItem tappable={true} onClick={() => {
+    //
+    //                 }}>
+    //                     <Icon icon="ion-navigate" style={{padding: '0 0.25rem'}}/>
+    //                     My Location
+    //                 </ListItem>
+    //             </List>
+    //         </Page>
+    //     );
+    // }
 }
