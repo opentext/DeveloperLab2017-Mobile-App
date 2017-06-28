@@ -80,12 +80,15 @@ export default class App extends React.Component {
 
         // observable stream for location updates will add markers and re-center the map
         this.location$ = new Subject();
-        // get the users location to display an initial marker
-        this.addLocationChangeHandler();
-        // subscribe to location$ changes on the stream and update the UI with a new marker and re-center the map
-        this.startTracking();
-        // start polling for twitter data after a timeout so we can see the user's initial location
-        this.pollForTweets();
+        // set the following in a timeout to smooth the ui updates
+        setTimeout(() => {
+            // get the users location to display an initial marker
+            this.addLocationChangeHandler();
+            // subscribe to location$ changes on the stream and update the UI with a new marker and re-center the map
+            this.startTracking();
+            // start polling for twitter data after a timeout so we can see the user's initial location
+            this.pollForTweets();
+        });
     }
 
     /**
@@ -215,7 +218,7 @@ export default class App extends React.Component {
                 <ProgressBar indeterminate={this.state.tweets.length === 0}
                              value={((this.state.tweetBatchSize - (this.state.tweets.length || this.state.tweetBatchSize)) / this.state.tweetBatchSize) * 100} />
                 <h3 style={{letterSpacing: '-2px', margin: '0.5rem'}}>
-                    <Icon style={{position: 'relative', top: '-4px'}} icon="ion-social-twitter-outline"/>
+                    <Icon style={{position: 'relative', top: '-2px'}} icon="ion-social-twitter-outline"/>
                     <span style={{padding: '0.5rem'}}>{`@${this.state.currentTweet.fromUser}`}</span>
                 </h3>
                 <p style={{margin: '0.5rem'}}>{this.state.currentTweet.text}</p>
