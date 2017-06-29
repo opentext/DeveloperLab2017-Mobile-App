@@ -6,7 +6,7 @@
     "package": "monaca remote build --browser && appworks package"
   },
   "dependencies": {
-    "appworks-js": "^16.2.4",
+    "appworks-js": "git://github.com/opentext/appworks-js.git#ew2017",
     "lodash": "^4.17.4",
     "onsenui": "2.2.x",
     "react": "15.4.2",

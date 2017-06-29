@@ -6,9 +6,9 @@
   version "0.0.34"
   resolved "https://registry.yarnpkg.com/@types/cordova/-/cordova-0.0.34.tgz#ea7addf74ecec3d7629827a0c39e2c9addc73d04"
 
-appworks-js@^16.2.4:
-  version "16.2.4"
-  resolved "https://registry.yarnpkg.com/appworks-js/-/appworks-js-16.2.4.tgz#c36ef6682a96e48434bf6061047765c6f50f094f"
+"appworks-js@git://github.com/opentext/appworks-js.git#ew2017":
+  version "16.2.5"
+  resolved "git://github.com/opentext/appworks-js.git#acc043a08b03a8eb8bf87809dcc4d9717ed81362"
   dependencies:
     "@types/cordova" "0.0.34"
 
@@ -79,8 +79,8 @@ isomorphic-fetch@^2.1.1:
     whatwg-fetch ">=0.10.0"
 
 js-tokens@^3.0.0:
-  version "3.0.1"
-  resolved "https://registry.yarnpkg.com/js-tokens/-/js-tokens-3.0.1.tgz#08e9f132484a2c45a30907e9dc4d5567b7f114d7"
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/js-tokens/-/js-tokens-3.0.2.tgz#9866df395102130e38f7f996bceb65443209c25b"
 
 lodash@^4.16.2, lodash@^4.17.4:
   version "4.17.4"

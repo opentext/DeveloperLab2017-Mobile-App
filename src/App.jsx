@@ -1,16 +1,30 @@
-import React from 'react';
-import {Page, Button, BottomToolbar, List, ListItem, ListHeader, Icon, Input, ProgressBar} from 'react-onsenui';
-import withScriptjs from 'react-google-maps/lib/async/withScriptjs';
-import {withGoogleMap, GoogleMap, Marker} from "react-google-maps";
-import {AWLocation, AWCompass} from 'appworks-js';
-import * as _ from 'lodash';
-import {Subject} from 'rxjs';
-import 'whatwg-fetch'
-
 /**
  * Default coordinates point to Toronto
  * @type {{lat: number, lng: number}}
  */
+import React from 'react';
+import {
+    Page,
+    AlertDialog,
+    SpeedDial,
+    SpeedDialItem,
+    Fab,
+    Button,
+    BottomToolbar,
+    List,
+    ListItem,
+    ListHeader,
+    Icon,
+    Input,
+    ProgressBar
+} from 'react-onsenui';
+import withScriptjs from 'react-google-maps/lib/async/withScriptjs';
+import {withGoogleMap, GoogleMap, Marker} from "react-google-maps";
+import {AWLocation, AWCompass, isDesktopEnv, isMobileEnv} from 'appworks-js';
+import * as _ from 'lodash';
+import {Subject} from 'rxjs';
+import 'whatwg-fetch'
+
 const defaultMapCenter = {lat: 43.6525, lng: -79.381667};
 
 /**
@@ -69,8 +83,10 @@ export default class App extends React.Component {
                 fromUser: null,
                 text: 'Loading...'
             },
+            batch: [],
             tweets: [],
-            tweetBatchSize: 0
+            batchSize: 0,
+            showToast: false
         };
         // handle input bindings correctly
         this.handleMapLoad = this.handleMapLoad.bind(this);
@@ -133,7 +149,7 @@ export default class App extends React.Component {
     /**
      * Ask the twitter service for random twitter data (with locations) and poll every n seconds
      */
-    pollForTweets(n=10000) {
+    pollForTweets(n = 10000) {
         const headers = new Headers({'Content-Type': 'application/json'});
         const request = new Request(tweetServiceEndpoint, {
             method: 'GET',
@@ -158,7 +174,7 @@ export default class App extends React.Component {
                 }
             };
             // update the batch size to show the progress bar correctly
-            this.setState({tweetBatchSize: tweets.length});
+            this.setState({batchSize: tweets.length, batch: Object.assign([], tweets)});
             // tweets come in batches of 0-50 -- emit one at a time and then grab the next batch
             doEmitNextTweet();
         });
@@ -197,16 +213,72 @@ export default class App extends React.Component {
 
     /**
      *
+     */
+    exportTweets() {
+        const fileManager = new AWFileSystem();
+        fileManager.createFile(
+            'EW2017TwitterData.json',
+            () => this.setState({showToast: true}),
+            err => console.error(err),
+            JSON.stringify(this.state.batch)
+        );
+    }
+
+    /**
+     *
+     * @returns {number}
+     */
+    progressBarValue() {
+        return ((this.state.batchSize - (this.state.tweets.length || this.state.batchSize)) / this.state.batchSize) * 100;
+    }
+
+    /**
+     *
+     * @returns {*}
+     */
+    renderToolbar() {
+        if (isDesktopEnv()) {
+            return (
+                <div>
+                    <SpeedDial position="bottom right">
+                        <Fab>
+                            <Icon icon="md-more"/>
+                        </Fab>
+                        <SpeedDialItem onClick={() => this.exportTweets()}>
+                            <Icon icon="md-cloud-download"/>
+                        </SpeedDialItem>
+                    </SpeedDial>
+                    <AlertDialog isOpen={this.state.showToast} modifier="material">
+                        <div className="alert-dialog-title">Success</div>
+                        <div className="alert-dialog-content">{this.state.batch.length} Tweets exported</div>
+                        <div className="alert-dialog-footer">
+                            <button className="alert-dialog-button" onClick={() => this.setState({showToast: false})}>
+                                Done
+                            </button>
+                        </div>
+                    </AlertDialog>
+                </div>
+            );
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     *
      * @returns {XML}
      */
     render() {
         return (
-            <Page contentStyle={{top: 0, bottom: 0}}>
+            <Page renderToolbar={() => this.renderToolbar()} contentStyle={{top: 0, bottom: 0}}>
                 <DeveloperLabGMap
                     googleMapURL="https://maps.googleapis.com/maps/api/js?key=AIzaSyBq5UXyM3tZ-cbQ8S_-RB7VwdoYZOmaAHg"
-                    loadingElement={<div style={{height: '75%', textAlign: 'center', paddingTop: '50%'}}><Icon icon='ion-navigate' /></div>}
-                    containerElement={<div style={{ height: `75%`}} />}
-                    mapElement={<div style={{ height: `100%` }} />}
+                    loadingElement={(
+                        <div style={{height: '75%', textAlign: 'center', paddingTop: '50%'}}>
+                            <Icon icon='ion-navigate'/>
+                        </div>)}
+                    containerElement={<div style={{height: `75%`}}/>}
+                    mapElement={<div style={{height: `100%`}}/>}
                     markers={this.state.markers}
                     center={this.state.center ? {lat: this.state.center.lat, lng: this.state.center.lng} : undefined}
                     setDefaultMapCenter={this.state.setDefaultMapCenter}
@@ -215,8 +287,7 @@ export default class App extends React.Component {
                     onMapClick={this.handleMapClick}
                     onDragStart={this.handleDragStart}
                     onMarkerRightClick={this.handleMarkerRightClick}/>
-                <ProgressBar indeterminate={this.state.tweets.length === 0}
-                             value={((this.state.tweetBatchSize - (this.state.tweets.length || this.state.tweetBatchSize)) / this.state.tweetBatchSize) * 100} />
+                <ProgressBar indeterminate={this.state.tweets.length === 0} value={this.progressBarValue()}/>
                 <h3 style={{letterSpacing: '-2px', margin: '0.5rem'}}>
                     <Icon style={{position: 'relative', top: '-2px'}} icon="ion-social-twitter-outline"/>
                     <span style={{padding: '0.5rem'}}>{`@${this.state.currentTweet.fromUser}`}</span>
