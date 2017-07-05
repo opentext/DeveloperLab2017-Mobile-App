@@ -20,7 +20,7 @@ import {
 } from 'react-onsenui';
 import withScriptjs from 'react-google-maps/lib/async/withScriptjs';
 import {withGoogleMap, GoogleMap, Marker} from "react-google-maps";
-import {AWLocation, AWCompass, isDesktopEnv, isMobileEnv} from 'appworks-js';
+import {AWLocation, AWCompass, AWFileSystem, isDesktopEnv, isMobileEnv} from 'appworks-js';
 import * as _ from 'lodash';
 import {Subject} from 'rxjs';
 import 'whatwg-fetch'
@@ -216,12 +216,14 @@ export default class App extends React.Component {
      */
     exportTweets() {
         const fileManager = new AWFileSystem();
-        fileManager.createFile(
-            'EW2017TwitterData.json',
-            () => this.setState({showToast: true}),
-            err => console.error(err),
-            JSON.stringify(this.state.batch)
-        );
+        fileManager.getPath('documents', path => {
+            fileManager.createFile(
+                `${path}/EW2017TwitterData.json`,
+                () => this.setState({showToast: true}),
+                err => console.error(err),
+                JSON.stringify(this.state.batch)
+            );
+        });
     }
 
     /**

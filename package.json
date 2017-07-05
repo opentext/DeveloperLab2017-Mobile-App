@@ -3,7 +3,8 @@
   "version": "2.2.7+20170324.1",
   "description": "",
   "scripts": {
-    "package": "monaca remote build --browser && appworks package"
+    "build": "monaca remote build --browser",
+    "package": "appworks package"
   },
   "dependencies": {
     "appworks-js": "git://github.com/opentext/appworks-js.git#ew2017",
