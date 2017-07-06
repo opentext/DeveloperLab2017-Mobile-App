@@ -149,7 +149,7 @@ export default class App extends React.Component {
     /**
      * Ask the twitter service for random twitter data (with locations) and poll every n seconds
      */
-    pollForTweets(n = 10000) {
+    pollForTweets() {
         const headers = new Headers({'Content-Type': 'application/json'});
         const request = new Request(tweetServiceEndpoint, {
             method: 'GET',
@@ -158,26 +158,30 @@ export default class App extends React.Component {
         fetch(request).then(res => {
             return res.json();
         }).then(tweets => {
-            const doEmitNextTweet = () => {
-                if (tweets.length) {
-                    const currentTweet = tweets.pop();
-                    this.setState({currentTweet: currentTweet.tweet, tweets: tweets});
-                    this.location$.next({
-                        coords: {latitude: currentTweet.latLng.lat, longitude: currentTweet.latLng.lng},
-                        timestamp: new Date().getTime()
-                    });
-                    setTimeout(() => {
-                        doEmitNextTweet();
-                    }, n);
-                } else {
-                    this.pollForTweets();
-                }
-            };
-            // update the batch size to show the progress bar correctly
-            this.setState({batchSize: tweets.length, batch: Object.assign([], tweets)});
-            // tweets come in batches of 0-50 -- emit one at a time and then grab the next batch
-            doEmitNextTweet();
+            this.tweetsDidLoad(tweets);
         });
+    }
+
+    tweetsDidLoad(tweets, n = 10000) {
+        const doEmitNextTweet = () => {
+            if (tweets.length) {
+                const currentTweet = tweets.pop();
+                this.setState({currentTweet: currentTweet.tweet, tweets: tweets});
+                this.location$.next({
+                    coords: {latitude: currentTweet.latLng.lat, longitude: currentTweet.latLng.lng},
+                    timestamp: new Date().getTime()
+                });
+                setTimeout(() => {
+                    doEmitNextTweet();
+                }, n);
+            } else {
+                this.pollForTweets();
+            }
+        };
+        // update the batch size to show the progress bar correctly
+        this.setState({batchSize: tweets.length, batch: Object.assign([], tweets)});
+        // tweets come in batches of 0-50 -- emit one at a time and then grab the next batch
+        doEmitNextTweet();
     }
 
     /**
@@ -228,6 +232,24 @@ export default class App extends React.Component {
 
     /**
      *
+     */
+    importTweets() {
+        const fileManager = new AWFileSystem();
+        fileManager.showFileSelector({multiSelections: false}, result => {
+            const path = result[0];
+            fileManager.readFile(path, data => {
+                try {
+                    const tweets = JSON.parse(data);
+                    this.tweetsDidLoad(tweets, 10);
+                } catch (e) {
+                    console.error(e);
+                }
+            });
+        });
+    }
+
+    /**
+     *
      * @returns {number}
      */
     progressBarValue() {
@@ -247,7 +269,10 @@ export default class App extends React.Component {
                             <Icon icon="md-more"/>
                         </Fab>
                         <SpeedDialItem onClick={() => this.exportTweets()}>
-                            <Icon icon="md-cloud-download"/>
+                            <Icon icon="md-download"/>
+                        </SpeedDialItem>
+                        <SpeedDialItem onClick={() => this.importTweets()}>
+                            <Icon icon="md-file-text"/>
                         </SpeedDialItem>
                     </SpeedDial>
                     <AlertDialog isOpen={this.state.showToast} modifier="material">

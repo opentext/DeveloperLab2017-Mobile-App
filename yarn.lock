@@ -8,7 +8,7 @@
 
 "appworks-js@git://github.com/opentext/appworks-js.git#ew2017":
   version "16.2.5"
-  resolved "git://github.com/opentext/appworks-js.git#acc043a08b03a8eb8bf87809dcc4d9717ed81362"
+  resolved "git://github.com/opentext/appworks-js.git#695b9475a05038db9f8fa64b88eeaa94ee0aa911"
   dependencies:
     "@types/cordova" "0.0.34"
 
@@ -165,8 +165,8 @@ regenerator-runtime@^0.10.0:
   resolved "https://registry.yarnpkg.com/regenerator-runtime/-/regenerator-runtime-0.10.5.tgz#336c3efc1220adcedda2c9fab67b5a7955a33658"
 
 rxjs@^5.4.1:
-  version "5.4.1"
-  resolved "https://registry.yarnpkg.com/rxjs/-/rxjs-5.4.1.tgz#b62f757f279445d265a18a58fb0a70dc90e91626"
+  version "5.4.2"
+  resolved "https://registry.yarnpkg.com/rxjs/-/rxjs-5.4.2.tgz#2a3236fcbf03df57bae06fd6972fd99e5c08fcf7"
   dependencies:
     symbol-observable "^1.0.1"
 
