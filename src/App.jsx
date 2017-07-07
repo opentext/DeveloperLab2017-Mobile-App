@@ -25,6 +25,8 @@ import * as _ from 'lodash';
 import {Subject} from 'rxjs';
 import 'whatwg-fetch'
 
+const defaultZoomLevel = 10;
+
 const defaultMapCenter = {lat: 43.6525, lng: -79.381667};
 
 /**
@@ -40,7 +42,7 @@ const tweetServiceEndpoint = 'http://ew2016.appworks.dev:8080/twitter-proxy-serv
 const DeveloperLabGMap = _.flowRight(withScriptjs, withGoogleMap)(props => (
     <GoogleMap
         ref={props.onMapLoad}
-        defaultZoom={10}
+        defaultZoom={props.zoomLevel}
         center={getMapCenter(props)}
         onDragStart={props.onDragStart}
         onClick={props.onMapClick}>
@@ -79,6 +81,7 @@ export default class App extends React.Component {
             markers: [],
             currentLocation: null,
             setDefaultMapCenter: true,
+            zoomLevel: defaultZoomLevel,
             currentTweet: {
                 fromUser: null,
                 text: 'Loading...'
@@ -88,6 +91,8 @@ export default class App extends React.Component {
             batchSize: 0,
             showToast: false
         };
+        this.rotationTimeout = null;
+        this.pollTimeout = null;
         // handle input bindings correctly
         this.handleMapLoad = this.handleMapLoad.bind(this);
         this.handleMapClick = this.handleMapClick.bind(this);
@@ -159,10 +164,17 @@ export default class App extends React.Component {
             return res.json();
         }).then(tweets => {
             this.tweetsDidLoad(tweets);
+            this.setState({zoomLevel: defaultZoomLevel});
         });
     }
 
-    tweetsDidLoad(tweets, n = 10000) {
+    /**
+     * Emit tweets on a timeout. When all tweets in the list have been emitted, fetch the next batch and repeat.
+     * @param tweets
+     * @param nextTweetTimeout
+     * @param nextBatchTimeout
+     */
+    tweetsDidLoad(tweets, nextTweetTimeout = 10000, nextBatchTimeout = 0) {
         const doEmitNextTweet = () => {
             if (tweets.length) {
                 const currentTweet = tweets.pop();
@@ -171,13 +183,18 @@ export default class App extends React.Component {
                     coords: {latitude: currentTweet.latLng.lat, longitude: currentTweet.latLng.lng},
                     timestamp: new Date().getTime()
                 });
-                setTimeout(() => {
+                this.rotationTimeout = setTimeout(() => {
                     doEmitNextTweet();
-                }, n);
+                }, nextTweetTimeout);
             } else {
-                this.pollForTweets();
+                this.pollTimeout = setTimeout(() => {
+                    this.pollForTweets();
+                }, nextBatchTimeout);
             }
         };
+        // reset timeouts
+        clearTimeout(this.rotationTimeout);
+        clearTimeout(this.pollTimeout);
         // update the batch size to show the progress bar correctly
         this.setState({batchSize: tweets.length, batch: Object.assign([], tweets)});
         // tweets come in batches of 0-50 -- emit one at a time and then grab the next batch
@@ -240,7 +257,8 @@ export default class App extends React.Component {
             fileManager.readFile(path, data => {
                 try {
                     const tweets = JSON.parse(data);
-                    this.tweetsDidLoad(tweets, 10);
+                    this.tweetsDidLoad(tweets, 10, 50000);
+                    this.setState({zoomLevel: 50});
                 } catch (e) {
                     console.error(e);
                 }
@@ -306,6 +324,7 @@ export default class App extends React.Component {
                         </div>)}
                     containerElement={<div style={{height: `75%`}}/>}
                     mapElement={<div style={{height: `100%`}}/>}
+                    zoomLevel={this.state.zoomLevel}
                     markers={this.state.markers}
                     center={this.state.center ? {lat: this.state.center.lat, lng: this.state.center.lng} : undefined}
                     setDefaultMapCenter={this.state.setDefaultMapCenter}
