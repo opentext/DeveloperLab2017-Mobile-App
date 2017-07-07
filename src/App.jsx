@@ -89,7 +89,8 @@ export default class App extends React.Component {
             batch: [],
             tweets: [],
             batchSize: 0,
-            showToast: false
+            showToast: false,
+            progressIsIndeterminate: true
         };
         this.rotationTimeout = null;
         this.pollTimeout = null;
@@ -188,6 +189,7 @@ export default class App extends React.Component {
                 }, nextTweetTimeout);
             } else {
                 this.pollTimeout = setTimeout(() => {
+                    this.setState({progressIsIndeterminate: true});
                     this.pollForTweets();
                 }, nextBatchTimeout);
             }
@@ -196,7 +198,7 @@ export default class App extends React.Component {
         clearTimeout(this.rotationTimeout);
         clearTimeout(this.pollTimeout);
         // update the batch size to show the progress bar correctly
-        this.setState({batchSize: tweets.length, batch: Object.assign([], tweets)});
+        this.setState({batchSize: tweets.length, batch: Object.assign([], tweets), progressIsIndeterminate: false});
         // tweets come in batches of 0-50 -- emit one at a time and then grab the next batch
         doEmitNextTweet();
     }
@@ -333,7 +335,7 @@ export default class App extends React.Component {
                     onMapClick={this.handleMapClick}
                     onDragStart={this.handleDragStart}
                     onMarkerRightClick={this.handleMarkerRightClick}/>
-                <ProgressBar indeterminate={this.state.tweets.length === 0} value={this.progressBarValue()}/>
+                <ProgressBar indeterminate={this.state.progressIsIndeterminate} value={this.progressBarValue()}/>
                 <h3 style={{letterSpacing: '-2px', margin: '0.5rem'}}>
                     <Icon style={{position: 'relative', top: '-2px'}} icon="ion-social-twitter-outline"/>
                     <span style={{padding: '0.5rem'}}>{`@${this.state.currentTweet.fromUser}`}</span>
