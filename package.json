@@ -11,6 +11,7 @@
   "dependencies": {
     "appworks-js": "git://github.com/opentext/appworks-js.git#ew2017",
     "lodash": "^4.17.4",
+    "monaca": "^2.3.1",
     "onsenui": "2.2.x",
     "react": "15.4.2",
     "react-dom": "15.4.2",
