@@ -17,7 +17,7 @@ const defaultMapCenter = {lat: 43.6525, lng: -79.381667};
  * The service that provides us with our twitter search data
  * @type {string}
  */
-const tweetServiceEndpoint = 'http://ew2016.appworks.dev:8080/twitter-proxy-service/api/tweets';
+const tweetServiceEndpoint = 'https://developerlab.opentext.com:8443/twitter-proxy-service/api/tweets';
 
 /**
  * Wrapper around the "react-google-maps" rendering helper to wrap our Google Map component and provide it with

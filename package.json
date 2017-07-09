@@ -4,7 +4,8 @@
   "description": "",
   "scripts": {
     "build": "webpack --config webpack.dev.config.js",
-    "package": "monaca remote build --browser && appworks package"
+    "package": "appworks package",
+    "serve": "appworks serve",
   },
   "dependencies": {
     "appworks-js": "^16.2.4",
