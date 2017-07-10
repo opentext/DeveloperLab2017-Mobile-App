@@ -238,15 +238,7 @@ export default class App extends React.Component {
      *
      */
     exportTweets() {
-        const fileManager = new AWFileSystem();
-        fileManager.getPath('documents', path => {
-            fileManager.createFile(
-                `${path}/EW2017TwitterData.json`,
-                () => this.setState({showToast: true}),
-                err => console.error(err),
-                JSON.stringify(this.state.batch)
-            );
-        });
+        // TODO write code here
     }
 
     /**
