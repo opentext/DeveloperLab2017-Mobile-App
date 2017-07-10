@@ -154,7 +154,9 @@ export default class App extends React.Component {
                         doEmitNextTweet();
                     }, n);
                 } else {
-                    this.pollForTweets();
+                    setTimeout(() => {
+                        this.pollForTweets();
+                    }, n);
                 }
             };
             // update the batch size to show the progress bar correctly
