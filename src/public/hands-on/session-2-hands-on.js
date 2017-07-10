@@ -1,12 +1,11 @@
 const pendingItems = new Rx.Subject();
+// TODO
 
 pendingItems.subscribe(item => {
     api.syncLocation(item).then(result => {
-        console.log('Location sent successfully!');
+        // TODO
     }).catch(error => {
-        console.error('Uh oh! There was an error.', error);
-        // add item back to stream to retry
-        pendingItems.next(item);
+        // TODO
     });
 });
 
