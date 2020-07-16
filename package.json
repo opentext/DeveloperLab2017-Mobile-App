@@ -7,7 +7,7 @@
   },
   "dependencies": {
     "appworks-js": "^16.2.4",
-    "lodash": "^4.17.4",
+    "lodash": "^4.17.19",
     "onsenui": "2.2.x",
     "react": "15.4.2",
     "react-dom": "15.4.2",
